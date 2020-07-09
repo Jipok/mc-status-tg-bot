@@ -8,7 +8,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, JobQu
 from socket import timeout
 
 
-BOT_ID = "YOUR TOKEN!!!!!!!!!!!!!"
+BOT_TOKEN = "YOUR TOKEN HERE"
 
 
 @dataclass
