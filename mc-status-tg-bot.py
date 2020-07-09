@@ -20,8 +20,8 @@ class CheckInfo:
     status: str
     job: JobQueue
     
-bot = telegram.Bot(BOT_ID)
-updater = Updater(BOT_ID, use_context=True)
+bot = telegram.Bot(BOT_TOKEN)
+updater = Updater(BOT_TOKEN, use_context=True)
 
 
 def start(update, context):
