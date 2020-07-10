@@ -1,4 +1,6 @@
 Telegram bot that displays the number of playing players on a specified Minecraft server
+
+You can try it without installing: [@mc_status_bot](https://t.me/mc_status_bot)
 ## Installation
 1. Need python 3.7 or higher
 2. `git clone https://github.com/Jipok/mc-status-tg-bot`
