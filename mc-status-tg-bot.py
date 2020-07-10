@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import traceback
-import logging
 from dataclasses import dataclass
 from mcstatus import MinecraftServer
 import telegram
@@ -8,7 +6,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, JobQu
 from socket import timeout
 
 
-BOT_TOKEN = "YOUR TOKEN HERE"
+BOT_TOKEN = "PAST YOUR TOKEN HERE"
 
 
 @dataclass
@@ -35,7 +33,11 @@ def start(update, context):
         "2) `/check 192.169.1.2 25565`\n"
         "3) Pin my message\n"
         "4) ???\n"
-        "5) PROFIT!\n", parse_mode = "Markdown")
+        "5) PROFIT!\n"
+        "\n"
+        "Source code:\n"
+        "https://github.com/Jipok/mc-status-tg-bot\n"
+        , parse_mode = "Markdown")
 
         
 def check(context):
@@ -43,16 +45,16 @@ def check(context):
     try:
         status = MinecraftServer(info.host, info.port).status()
         new_text = "Online: %i" % status.players.online
-    except (ConnectionRefusedError, timeout):
-        new_text = "Offline"
     except Exception as e:
-        info.job.schedule_removal()
-        logging.error(traceback.format_exc())
-        new_text = "Failed. Stopped"
+        new_text = "Offline"
         
     if info.status != new_text:
-        bot.edit_message_text(new_text, info.chat_id, info.msg_id)
-        info.status = new_text
+        try:
+            bot.edit_message_text(new_text, info.chat_id, info.msg_id)
+            info.status = new_text
+        except Exception as e:
+            info.job.schedule_removal()
+            print(info.host + ' checker removed')
 
         
 def check_cmd(update, context):
@@ -60,7 +62,7 @@ def check_cmd(update, context):
     try:
         host = str(context.args[0])
         port = int(context.args[1])
-        #MinecraftServer(host, port).status()
+        MinecraftServer(host, port).status()
     except (IndexError, ValueError):
         update.message.reply_text("Correct usage:\n/check host port")
         return
