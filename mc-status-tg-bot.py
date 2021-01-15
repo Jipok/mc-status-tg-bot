@@ -110,8 +110,8 @@ def check_cmd(update: Update, context: CallbackContext):
     task = CheckTask(username, host, port, chat_id, msg_id, "", None)
     tasks[chat_id] = task
 
-    # First try in 1th second. Then check every 15 seconds
-    task.job = context.job_queue.run_repeating(check, 15, 1, context=task)
+    # First try in 1th second. Then check every 20 seconds
+    task.job = context.job_queue.run_repeating(check, 20, 1, context=task)
 
 
 def stop(update: Update, context: CallbackContext):
@@ -133,7 +133,7 @@ try:
         print(line)
         tmp = line.replace("\n", "").split(',')
         task = CheckTask(tmp[0], tmp[1], int(tmp[2]), int(tmp[3]), int(tmp[4]), "".join(tmp[5:]), None)
-        task.job = updater.job_queue.run_repeating(check, 15, 1, context=task)
+        task.job = updater.job_queue.run_repeating(check, 20, 1, context=task)
         tasks[task.chat_id] = task
     file.close()
 except IOError:
