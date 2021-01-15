@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 import sys
 from dataclasses import dataclass
+from typing import Optional
 from mcstatus import MinecraftServer
 import telegram
 from telegram.update import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext, JobQueue
+from telegram.ext import CallbackContext, CommandHandler, JobQueue, Job, Updater
 from socket import timeout
 
 
 @dataclass
-class CheckInfo:
+class CheckTask:
     host: str
     port: int
+    username: str
     chat_id: int
     msg_id: int
     status: str
-    job: JobQueue
+    job: Optional[Job]
 
 
 # PAST YOUR TOKEN HERE
@@ -25,6 +27,7 @@ if not len(BOT_TOKEN):
     
 bot = telegram.Bot(BOT_TOKEN)
 updater = Updater(BOT_TOKEN, use_context=True)
+tasks = {}
 
 ############################################################################################################
 
@@ -80,27 +83,26 @@ def check_cmd(update: Update, context: CallbackContext):
         return
 
     # Add job to queue and stop current one if there is a timer already
-    if 'job' in context.chat_data:
-        info = context.chat_data['info']
-        bot.edit_message_text("Stopped. Last " + info.status, info.chat_id, info.msg_id)
-        context.chat_data['job'].schedule_removal()
-
-    print(update.message.from_user.username, host, port)
+    if chat_id in tasks:
+        task = tasks[chat_id]
+        bot.edit_message_text("Stopped. Last " + task.status, task.chat_id, task.msg_id)
+        task.job.schedule_removal()
     msg_id = update.message.reply_text("Started", disable_notification=True).message_id
+    task = CheckTask(host, port, update.message.from_user.username, chat_id, msg_id, "", None)
+    tasks[chat_id] = task
+    print(task.username, host, port)
 
-    info = CheckInfo(host, port, chat_id, msg_id, "", JobQueue())
     # First try in 1th second. Then check every 15 seconds
-    context.chat_data['job'] = context.job_queue.run_repeating(check, 15, 1, context = info)
-    info.job = context.chat_data['job']
-    context.chat_data['info'] = info
+    task.job = context.job_queue.run_repeating(check, 15, 1, context = task)
 
 
 def stop(update: Update, context: CallbackContext):
-    if 'job' in context.chat_data:
-        context.chat_data['job'].schedule_removal()
-        del context.chat_data['job']
-        info = context.chat_data['info']
-        bot.edit_message_text("Stopped. Last " + info.status, info.chat_id, info.msg_id)
+    chat_id = update.message.chat_id
+    if chat_id in tasks:
+        task = tasks[chat_id]
+        task.job.schedule_removal()
+        bot.edit_message_text("Stopped. Last " + task.status, task.chat_id, task.msg_id)
+        del tasks[chat_id]
     else:
         update.message.reply_text("Nothing to stop")
 
