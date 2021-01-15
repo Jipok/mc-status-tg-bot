@@ -54,24 +54,29 @@ def check(context):
     task = context.job.context
     try:
         status = MinecraftServer(task.host, task.port).status()
-        #try:
-        #    name = ""
-        #    for pair in status.description["extra"]:
-        #        name += pair["text"]
-        #    print(name.split("\n")[0].strip())
-        #except:
-        #    name = "Online: "
+        name = ""
+        # Try get server name(first string of motd)
+        try:
+            for pair in status.description["extra"]:
+                name += pair["text"]
+            name = name.split("\n")[0].strip()
+        except:
+            pass
+        if len(name) > 60 or len(name) < 1:
+            name = "Online: "
         online = ""
+        # Try get players name
         try:
             online = ", ".join(sorted([i.name for i in status.players.sample]))
         except:
             pass
         if len(online) > 60 or len(online) < 1:
             online = str(status.players.online)
-        new_text = "Online: " + online
+        new_text = name + ": " + online
     except Exception as e:
         new_text = "Offline"
 
+    # To skip telegram exception "Message is not modified"
     if task.status != new_text:
         try:
             bot.edit_message_text(new_text, task.chat_id, task.msg_id)
@@ -91,6 +96,7 @@ def check(context):
         file.write(task.status.replace("\n", ""))
         file.write('\n')
     file.close()
+
 
 
 def check_cmd(update: Update, context: CallbackContext):
