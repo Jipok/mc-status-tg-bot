@@ -54,7 +54,21 @@ def check(context):
     task = context.job.context
     try:
         status = MinecraftServer(task.host, task.port).status()
-        new_text = "Online: %i" % status.players.online
+        #try:
+        #    name = ""
+        #    for pair in status.description["extra"]:
+        #        name += pair["text"]
+        #    print(name.split("\n")[0].strip())
+        #except:
+        #    name = "Online: "
+        online = ""
+        try:
+            online = ", ".join(sorted([i.name for i in status.players.sample]))
+        except:
+            pass
+        if len(online) > 60 or len(online) < 1:
+            online = str(status.players.online)
+        new_text = "Online: " + online
     except Exception as e:
         new_text = "Offline"
 
@@ -132,7 +146,7 @@ try:
     for line in file.readlines():
         print(line)
         tmp = line.replace("\n", "").split(',')
-        task = CheckTask(tmp[0], tmp[1], int(tmp[2]), int(tmp[3]), int(tmp[4]), "".join(tmp[5:]), None)
+        task = CheckTask(tmp[0], tmp[1], int(tmp[2]), int(tmp[3]), int(tmp[4]), ",".join(tmp[5:]), None)
         task.job = updater.job_queue.run_repeating(check, 20, 1, context=task)
         tasks[task.chat_id] = task
     file.close()
