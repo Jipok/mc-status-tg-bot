@@ -3,6 +3,7 @@ import sys
 from dataclasses import dataclass
 from mcstatus import MinecraftServer
 import telegram
+from telegram.update import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext, JobQueue
 from socket import timeout
 
@@ -27,7 +28,7 @@ updater = Updater(BOT_TOKEN, use_context=True)
 
 ############################################################################################################
 
-def start(update, context):
+def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Hi! I can track the number of players on a minecraft server.\n" 
         "Usage: /check host port\n"
@@ -62,7 +63,7 @@ def check(context):
             print(info.host + ' checker removed')
 
 
-def check_cmd(update, context: CallbackContext):
+def check_cmd(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     try:
         host = str(context.args[0])
@@ -88,13 +89,13 @@ def check_cmd(update, context: CallbackContext):
     msg_id = update.message.reply_text("Started", disable_notification=True).message_id
 
     info = CheckInfo(host, port, chat_id, msg_id, "", JobQueue())
-    # First try in 0th second. Then check every 15 seconds
-    context.chat_data['job'] = context.job_queue.run_repeating(check, 15, 0, info)
+    # First try in 1th second. Then check every 15 seconds
+    context.chat_data['job'] = context.job_queue.run_repeating(check, 15, 1, context = info)
     info.job = context.chat_data['job']
     context.chat_data['info'] = info
 
 
-def stop(update, context):
+def stop(update: Update, context: CallbackContext):
     if 'job' in context.chat_data:
         context.chat_data['job'].schedule_removal()
         del context.chat_data['job']
