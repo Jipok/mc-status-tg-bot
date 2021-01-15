@@ -22,7 +22,7 @@ and then always call like this: `./mc-status-tg-bot`
 ### Usage
 Write to the bot or add it to the group and write there:
 
-`/check host port`
+`/check host:port`
 
 The bot will reply and update the message every 15 seconds. To stop updating:
 

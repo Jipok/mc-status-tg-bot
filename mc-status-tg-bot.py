@@ -39,7 +39,8 @@ def start(update: Update, context: CallbackContext):
         "\n"
         "Usage example:\n"
         "1) Add me to your telegram group\n"
-        "2) `/check 192.169.1.2 25565`\n"
+        "2) `/check 192.169.1.2:25558`\n"
+        " or /check mc.blablasomecraft.org"
         "3) Pin my message\n"
         "4) ???\n"
         "5) PROFIT!\n"
@@ -82,12 +83,16 @@ def check_cmd(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     username = update.message.from_user.username
     try:
-        host = str(context.args[0])
-        port = int(context.args[1])
+        tmp = context.args[0].split(':')
+        host = str(tmp[0])
+        if len(tmp) > 1:
+            port = int(tmp[1])
+        else:
+            port = 25565
         MinecraftServer(host, port).status()
     except (IndexError, ValueError):
         try:
-            update.message.reply_text("Correct usage:\n/check host port")
+            update.message.reply_text("Correct usage:\n/check host\n/check host:port")
         except:
             pass
         return
