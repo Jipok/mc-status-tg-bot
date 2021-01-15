@@ -11,9 +11,9 @@ from socket import timeout
 
 @dataclass
 class CheckTask:
+    username: str
     host: str
     port: int
-    username: str
     chat_id: int
     msg_id: int
     status: str
@@ -50,24 +50,37 @@ def start(update: Update, context: CallbackContext):
 
 
 def check(context):
-    info = context.job.context
+    task = context.job.context
     try:
-        status = MinecraftServer(info.host, info.port).status()
+        status = MinecraftServer(task.host, task.port).status()
         new_text = "Online: %i" % status.players.online
     except Exception as e:
         new_text = "Offline"
 
-    if info.status != new_text:
+    if task.status != new_text:
         try:
-            bot.edit_message_text(new_text, info.chat_id, info.msg_id)
-            info.status = new_text
+            bot.edit_message_text(new_text, task.chat_id, task.msg_id)
+            task.status = new_text
         except Exception as e:
-            info.job.schedule_removal()
-            print(info.host + ' checker removed')
+            task.job.schedule_removal()
+            print(task.host + ' checker removed')
+            del tasks[task.chat_id]
+    # Save tasks
+    file = open("tasks.txt", "w")
+    for task in tasks.values():
+        file.write(task.username + ',')
+        file.write(task.host + ',')
+        file.write(str(task.port) + ',')
+        file.write(str(task.chat_id) + ',')
+        file.write(str(task.msg_id) + ",")
+        file.write(task.status.replace("\n", ""))
+        file.write('\n')
+    file.close()
 
 
 def check_cmd(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
+    username = update.message.from_user.username
     try:
         host = str(context.args[0])
         port = int(context.args[1])
@@ -87,13 +100,13 @@ def check_cmd(update: Update, context: CallbackContext):
         task = tasks[chat_id]
         bot.edit_message_text("Stopped. Last " + task.status, task.chat_id, task.msg_id)
         task.job.schedule_removal()
+    print(username, host, port)
     msg_id = update.message.reply_text("Started", disable_notification=True).message_id
-    task = CheckTask(host, port, update.message.from_user.username, chat_id, msg_id, "", None)
+    task = CheckTask(username, host, port, chat_id, msg_id, "", None)
     tasks[chat_id] = task
-    print(task.username, host, port)
 
     # First try in 1th second. Then check every 15 seconds
-    task.job = context.job_queue.run_repeating(check, 15, 1, context = task)
+    task.job = context.job_queue.run_repeating(check, 15, 1, context=task)
 
 
 def stop(update: Update, context: CallbackContext):
@@ -107,6 +120,19 @@ def stop(update: Update, context: CallbackContext):
         update.message.reply_text("Nothing to stop")
 
 ############################################################################################################
+
+# Load tasks
+try:
+    file = open("tasks.txt", "r")
+    for line in file.readlines():
+        print(line)
+        tmp = line.replace("\n", "").split(',')
+        task = CheckTask(tmp[0], tmp[1], int(tmp[2]), int(tmp[3]), int(tmp[4]), "".join(tmp[5:]), None)
+        task.job = updater.job_queue.run_repeating(check, 15, 1, context=task)
+        tasks[task.chat_id] = task
+    file.close()
+except IOError:
+    pass
 
 # Get the dispatcher to register handlers
 dp = updater.dispatcher
