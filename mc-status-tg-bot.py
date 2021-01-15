@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
+import sys
 from dataclasses import dataclass
 from mcstatus import MinecraftServer
 import telegram
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, JobQueue
+from telegram.ext import Updater, CommandHandler, CallbackContext, JobQueue
 from socket import timeout
-
-
-BOT_TOKEN = "PAST YOUR TOKEN HERE"
 
 
 @dataclass
@@ -18,9 +16,16 @@ class CheckInfo:
     status: str
     job: JobQueue
 
+
+# PAST YOUR TOKEN HERE
+BOT_TOKEN = ""
+if not len(BOT_TOKEN):
+    BOT_TOKEN = sys.argv[1]
+    
 bot = telegram.Bot(BOT_TOKEN)
 updater = Updater(BOT_TOKEN, use_context=True)
 
+############################################################################################################
 
 def start(update, context):
     update.message.reply_text(
@@ -57,7 +62,7 @@ def check(context):
             print(info.host + ' checker removed')
 
 
-def check_cmd(update, context):
+def check_cmd(update, context: CallbackContext):
     chat_id = update.message.chat_id
     try:
         host = str(context.args[0])
@@ -98,6 +103,7 @@ def stop(update, context):
     else:
         update.message.reply_text("Nothing to stop")
 
+############################################################################################################
 
 # Get the dispatcher to register handlers
 dp = updater.dispatcher
