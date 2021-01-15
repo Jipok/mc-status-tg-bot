@@ -17,7 +17,7 @@ class CheckInfo:
     msg_id: int
     status: str
     job: JobQueue
-    
+
 bot = telegram.Bot(BOT_TOKEN)
 updater = Updater(BOT_TOKEN, use_context=True)
 
@@ -39,7 +39,7 @@ def start(update, context):
         "https://github.com/Jipok/mc-status-tg-bot\n"
         , parse_mode = "Markdown")
 
-        
+
 def check(context):
     info = context.job.context
     try:
@@ -47,7 +47,7 @@ def check(context):
         new_text = "Online: %i" % status.players.online
     except Exception as e:
         new_text = "Offline"
-        
+
     if info.status != new_text:
         try:
             bot.edit_message_text(new_text, info.chat_id, info.msg_id)
@@ -56,7 +56,7 @@ def check(context):
             info.job.schedule_removal()
             print(info.host + ' checker removed')
 
-        
+
 def check_cmd(update, context):
     chat_id = update.message.chat_id
     try:
@@ -64,7 +64,10 @@ def check_cmd(update, context):
         port = int(context.args[1])
         MinecraftServer(host, port).status()
     except (IndexError, ValueError):
-        update.message.reply_text("Correct usage:\n/check host port")
+        try:
+            update.message.reply_text("Correct usage:\n/check host port")
+        except:
+            pass
         return
     except Exception as e:
         update.message.reply_text("Error: {}".format(e))
@@ -75,7 +78,7 @@ def check_cmd(update, context):
         info = context.chat_data['info']
         bot.edit_message_text("Stopped. Last " + info.status, info.chat_id, info.msg_id)
         context.chat_data['job'].schedule_removal()
-        
+
     print(update.message.from_user.username, host, port)
     msg_id = update.message.reply_text("Started", disable_notification=True).message_id
 
@@ -85,7 +88,7 @@ def check_cmd(update, context):
     info.job = context.chat_data['job']
     context.chat_data['info'] = info
 
-    
+
 def stop(update, context):
     if 'job' in context.chat_data:
         context.chat_data['job'].schedule_removal()
@@ -95,7 +98,7 @@ def stop(update, context):
     else:
         update.message.reply_text("Nothing to stop")
 
-        
+
 # Get the dispatcher to register handlers
 dp = updater.dispatcher
 dp.add_handler(CommandHandler("check", check_cmd, pass_args=True, pass_job_queue=True,pass_chat_data=True))
