@@ -34,13 +34,13 @@ tasks = {}
 def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Hi! I can track the number of players on a minecraft server.\n" 
-        "Usage: /check host port\n"
+        "Usage: /check host:port\n"
         "For stop: /stop\n"
         "\n"
         "Usage example:\n"
         "1) Add me to your telegram group\n"
         "2) `/check 192.169.1.2:25558`\n"
-        " or /check mc.blablasomecraft.org"
+        " or `/check mc.blablasomecraft.org`\n"
         "3) Pin my message\n"
         "4) ???\n"
         "5) PROFIT!\n"
