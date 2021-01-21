@@ -63,7 +63,7 @@ def check(context):
         except:
             pass
         if len(name) > 60 or len(name) < 1:
-            name = "Online: "
+            name = "Online"
         online = ""
         # Try get players name
         try:
